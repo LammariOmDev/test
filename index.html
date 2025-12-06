@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Médicaments à Conditions Particulière - LammariOmDev</title>
+    <title>Liste Médicaments Remboursables - LammariOmDev®</title>
     
     <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
@@ -55,6 +55,18 @@
         .signature a { color: inherit; text-decoration: none; font-weight: bold; transition: color 0.3s; }
         .signature a:hover { color: #3498db; }
 
+        /* Onglets */
+        .nav-pills { justify-content: center; margin-bottom: 20px; gap: 15px; }
+        .nav-pills .nav-link {
+            color: #3498db; border: 2px solid #3498db; font-weight: bold;
+            border-radius: 30px; padding: 10px 25px; transition: 0.3s;
+        }
+        .nav-pills .nav-link:hover { background-color: #eaf6ff; }
+        .nav-pills .nav-link.active {
+            background-color: #3498db; color: white;
+            box-shadow: 0 4px 6px rgba(52, 152, 219, 0.4);
+        }
+
         /* Champ de recherche */
         .dataTables_filter input {
             border: 2px solid #3498db !important; 
@@ -67,7 +79,17 @@
         .dataTables_filter { text-align: left !important; }
         .dataTables_length { text-align: right !important; }
         
-        table.dataTable thead { background-color: #3498db; color: white; }
+        /* --- MODIFICATION ICI : En-têtes collants (Sticky Header) --- */
+        table.dataTable thead th {
+            position: sticky;
+            top: 0;
+            background-color: #3498db; /* Couleur de fond obligatoire pour cacher le texte qui passe dessous */
+            color: white;
+            z-index: 100; /* S'assure qu'il reste au-dessus des lignes */
+            box-shadow: 0 2px 2px -1px rgba(0,0,0,0.2); /* Petite ombre pour l'effet de profondeur */
+        }
+        /* ----------------------------------------------------------- */
+
         .dataTables_wrapper { font-size: 14px; margin-top: 10px; }
         
         #loading { font-size: 18px; color: #666; text-align: center; padding: 20px; }
@@ -92,9 +114,22 @@
 
 <div class="container">
     
-    <h1 id="main-title">Médicaments à Conditions Particulière de Remboursement</h1>
+    <ul class="nav nav-pills" id="pills-tab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="btn-demunis" onclick="switchCategory('demunis')">
+                Catégorie Démunis
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="btn-cancer" onclick="switchCategory('cancer')">
+                Catégorie Cancer
+            </button>
+        </li>
+    </ul>
+
+    <h1 id="main-title">Médicaments Remboursables (Démunis)</h1>
     <hr class="custom-line">
-    <div class="signature">By <a href="https://facebook.com/LammariOmDev" target="_blank">LammariOmDev ©2025</a></div>
+    <div class="signature">©2025 by <a href="https://facebook.com/LammariOmDev" target="_blank">LammariOmDev®</a></div>
 
     <div id="loading">
         <div class="spinner-border text-primary" role="status"></div>
@@ -115,7 +150,7 @@
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="modal-title">Détails de la Condition</h5>
+        <h5 class="modal-title" id="modal-title">Détails</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body" id="modal-content-body">
@@ -138,18 +173,34 @@
     let myModal = null; 
 
     window.onload = function() {
-        // Initialisation de la modale
         myModal = new bootstrap.Modal(document.getElementById('detailModal'));
-        
-        // Chargement direct du fichier unique
-        loadExcel('cpr.xlsx');
+        switchCategory('demunis');
     };
+
+    function switchCategory(category) {
+        let fileName = '';
+        let title = '';
+        
+        document.querySelectorAll('.nav-link').forEach(btn => btn.classList.remove('active'));
+        
+        if (category === 'demunis') {
+            fileName = 'demunis.xlsx';
+            title = "Médicaments Remboursables par CHIFA Catégorie Démunis";
+            document.getElementById('btn-demunis').classList.add('active');
+        } else if (category === 'cancer') {
+            fileName = 'cancer.xlsx';
+            title = "Médicaments Remboursables par CHIFA Catégorie CANCER";
+            document.getElementById('btn-cancer').classList.add('active');
+        }
+
+        document.getElementById('main-title').innerText = title;
+        loadExcel(fileName);
+    }
 
     async function loadExcel(file) {
         document.getElementById('loading').style.display = 'block';
         document.getElementById('monTableau').style.display = 'none';
         
-        // Si le tableau existe déjà, on le détruit pour le recréer proprement
         if ($.fn.DataTable.isDataTable('#monTableau')) {
             $('#monTableau').DataTable().destroy();
             $('#table-headers').empty(); 
@@ -157,7 +208,6 @@
         }
 
         try {
-            // Ajout du timestamp pour éviter le cache du navigateur
             const response = await fetch(file + '?t=' + new Date().getTime());
             if (!response.ok) throw new Error("Fichier introuvable");
 
@@ -170,7 +220,6 @@
             const jsonData = XLSX.utils.sheet_to_json(worksheet, {header: 1});
 
             if (jsonData.length > 0) {
-                // --- Création de l'entête ---
                 const headers = jsonData[0];
                 const headerRow = document.getElementById('table-headers');
                 
@@ -180,7 +229,6 @@
                     headerRow.appendChild(th);
                 });
 
-                // --- Création du corps du tableau ---
                 const body = document.getElementById('table-body');
                 
                 for (let i = 1; i < jsonData.length; i++) {
@@ -188,19 +236,15 @@
                     if (rowData.length > 0) {
                         const tr = document.createElement('tr');
                         
-                        // Récupération du nom du médicament (supposé être en colonne 1) pour le titre de la modale
                         let drugName = (rowData[0] !== undefined) ? String(rowData[0]) : "Médicament";
                         
                         headers.forEach((_, index) => { 
                             const td = document.createElement('td');
                             let cellContent = (rowData[index] !== undefined) ? String(rowData[index]) : "";
                             
-                            // Nettoyage et vérification du nom de la colonne
                             let currentHeaderName = (headers[index] || "").toString().trim().toUpperCase();
 
-                            // LOGIQUE DU BOUTON POPUP :
-                            // On cherche une colonne qui s'appelle exactement "CPR" (ou "CONDITIONS")
-                            if ((currentHeaderName === "CPR" || currentHeaderName === "CONDITIONS") && cellContent.trim() !== "") {
+                            if (currentHeaderName === "CPR" && cellContent.trim() !== "") {
                                 
                                 const btn = document.createElement('button');
                                 btn.className = 'btn btn-sm btn-info text-white'; 
@@ -211,7 +255,7 @@
                                 
                                 btn.onclick = function() {
                                     document.getElementById('modal-content-body').innerText = cellContent;
-                                    document.getElementById('modal-title').innerText = "Condition - " + drugName + "...";
+                                    document.getElementById('modal-title').innerText = drugName + " ...";
                                     myModal.show();
                                 };
                                 
@@ -227,12 +271,11 @@
                     }
                 }
 
-                // --- Initialisation de DataTables ---
                 tableInstance = $('#monTableau').DataTable({
                     language: {
                         processing:     "Traitement en cours...",
                         search:         "Rechercher&nbsp;:",
-                        lengthMenu:     "Afficher :  _MENU_  lignes",
+                        lengthMenu:    "Afficher : _MENU_ lignes",
                         info:           "Affichage de _START_ à _END_ sur _TOTAL_ éléments",
                         infoEmpty:      "Affichage de 0 à 0 sur 0 éléments",
                         infoFiltered:   "(filtré de _MAX_ éléments au total)",
@@ -256,7 +299,6 @@
                 
                 tableInstance.columns.adjust().draw();
 
-                // Focus automatique sur la recherche
                 setTimeout(function() {
                     $('.dataTables_filter input').focus();
                 }, 100);
@@ -265,11 +307,10 @@
         } catch (error) {
             console.error("Erreur:", error);
             document.getElementById('loading').innerHTML = 
-                "<div class='alert alert-danger'>Erreur : Impossible de charger le fichier " + file + ".<br>Vérifiez qu'il est bien dans le même dossier.</div>";
+                "<span style='color:red; font-weight:bold'>Erreur : Impossible de charger le fichier " + file + ".</span>";
         }
     }
 </script>
 
 </body>
-
 </html>
