@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Liste Médicaments Remboursables - LammariOmDev</title>
+    <title>Liste Médicaments Remboursables - LammariOmDev®</title>
     
     <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
@@ -124,7 +124,7 @@
 
     <h1 id="main-title">Médicaments Remboursables (Démunis)</h1>
     <hr class="custom-line">
-    <div class="signature">By <a href="https://facebook.com/LammariOmDev" target="_blank">LammariOmDev ©2025</a></div>
+    <div class="signature">©2025 by <a href="https://facebook.com/LammariOmDev" target="_blank">LammariOmDev®</a></div>
 
     <div id="loading">
         <div class="spinner-border text-primary" role="status"></div>
@@ -245,7 +245,7 @@
                                 btn.style.whiteSpace = 'nowrap'; 
                                 btn.onclick = function() {
                                     document.getElementById('modal-content-body').innerText = cellContent;
-                                    document.getElementById('modal-title').innerText = "CPR - " + drugName;
+                                    document.getElementById('modal-title').innerText = drugName + " ...";
                                     myModal.show();
                                 };
                                 td.appendChild(btn); 
@@ -309,3 +309,4 @@
 
 </body>
 </html>
+
