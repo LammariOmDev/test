@@ -7,7 +7,6 @@
     
     <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
-    <link href="https://cdn.datatables.net/fixedheader/3.4.0/css/fixedheader.bootstrap5.min.css" rel="stylesheet">
 
     <style>
         body { 
@@ -80,7 +79,7 @@
         .dataTables_filter { text-align: left !important; }
         .dataTables_length { text-align: right !important; }
         
-        /* Couleur de l'en-tête (Le 'sticky' est maintenant géré par le script) */
+        /* En-tête : Couleur bleue */
         table.dataTable thead { background-color: #3498db; color: white; }
         .dataTables_wrapper { font-size: 14px; margin-top: 10px; }
         
@@ -100,6 +99,10 @@
         .btn-close {
             filter: invert(1) grayscale(100%) brightness(200%); 
         }
+
+        /* Petit ajustement pour l'alignement des colonnes avec le scroll */
+        .dataTables_scrollHeadInner { width: 100% !important; }
+        .dataTables_scrollHeadInner table { width: 100% !important; }
     </style>
 </head>
 <body>
@@ -128,15 +131,13 @@
         <br>Chargement des données...
     </div>
 
-    <div class="table-responsive">
-        <table id="monTableau" class="table table-striped" style="width:100%; display:none;">
-            <thead>
-                <tr id="table-headers"></tr>
-            </thead>
-            <tbody id="table-body"></tbody>
-        </table>
+    <table id="monTableau" class="table table-striped" style="width:100%; display:none;">
+        <thead>
+            <tr id="table-headers"></tr>
+        </thead>
+        <tbody id="table-body"></tbody>
+    </table>
     </div>
-</div>
 
 <div class="modal fade" id="detailModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg">
@@ -158,8 +159,6 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
-<script src="https://cdn.datatables.net/fixedheader/3.4.0/js/dataTables.fixedheader.min.js"></script>
-
 <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 
 <script>
@@ -259,14 +258,15 @@
                     }
                 }
 
-                // IMPORTANT : On affiche la table AVANT de lancer DataTables 
-                // pour que FixedHeader puisse calculer les positions
                 document.getElementById('loading').style.display = 'none';
                 document.getElementById('monTableau').style.display = 'table';
 
                 tableInstance = $('#monTableau').DataTable({
-                    // --- NOUVEAU : Activation de l'en-tête fixe ---
-                    fixedHeader: true,
+                    // --- NOUVEAU : ACTIVATION DU SCROLL INTERNE ---
+                    // "55vh" signifie 55% de la hauteur visible de l'écran
+                    scrollY:        "55vh", 
+                    scrollCollapse: true,
+                    scrollX:        true, // Active le scroll horizontal si besoin
                     // ----------------------------------------------
                     language: {
                         processing:     "Traitement en cours...",
@@ -290,6 +290,8 @@
                     order: [] 
                 });
 
+                // Cette commande est cruciale quand on active le scrollX/Y 
+                // pour réaligner les titres avec les colonnes
                 tableInstance.columns.adjust().draw();
 
                 setTimeout(function() {
