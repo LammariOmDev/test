@@ -144,19 +144,14 @@
             padding:22px 28px 36px 28px;
         }
         table.dataTable thead {
-            background: var(--green-1);
-            color: #fff;
+            background: linear-gradient(90deg, var(--green-1), var(--green-2));
+            color: white;
             border:none;
-        }
-        table.dataTable.fixedHeader-floating thead {
-            background: var(--green-1) !important;
-            color: #fff !important;
         }
         table.dataTable thead th {
             font-weight:700;
             padding:14px 18px;
             text-align:left;
-            color: #fff;
         }
         table.dataTable tbody td {
             padding:18px;
@@ -199,6 +194,38 @@
             .controls .right-controls { justify-content:flex-end; }
             .hero .hero-right { display:none; }
         }
+        /* Force l'en-tête du tableau en vert + texte blanc pour DataTables (original, clone/floating, scroll-head) */
+table.dataTable thead,
+.dataTables_wrapper table.dataTable thead,
+.dataTables_scrollHeadInner table thead,
+.dataTables_scrollHead table thead,
+.fixedHeader-floating thead,
+.fixedHeader-floating thead th {
+  background: linear-gradient(90deg, #238a4f, #2ea56a) !important; /* teinte verte */
+  color: #ffffff !important;
+  border: none !important;
+}
+
+/* Garantir la couleur blanche et le style pour les th */
+table.dataTable thead th,
+.dataTables_scrollHeadInner table thead th,
+.fixedHeader-floating thead th {
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.6px !important;
+}
+
+/* Assurer que l'en-tête flottant reste au-dessus */
+.fixedHeader-floating {
+  z-index: 1200 !important;
+}
+
+/* Cas où DataTables encapsule l'en-tête */
+.dataTables_scrollHeadInner,
+.dataTables_scrollHeadInner table {
+  background: transparent !important;
+}
     </style>
 </head>
 <body>
