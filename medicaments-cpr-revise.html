@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Médicaments à Conditions Particulières - LammariOmDev®</title>
+    <meta name="description" content="Liste des médicaments à conditions particulières de remboursement (CPR) avec recherche et détails.">
+
+    <link rel="icon" type="image/png" href="favicon.png">
+
+    <!-- Remarque : pour plus de sécurité/performance, ajouter des attributs integrity & crossorigin si vous gardez ces CDN -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    <link href="https://cdn.datatables.net/fixedheader/3.4.0/css/fixedHeader.bootstrap5.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            padding: 20px;
+            background-color: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            min-height: 80vh;
+        }
+
+        h1 {
+            margin-bottom: 10px;
+            color: #2c3e50;
+            font-size: 26px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-align: center;
+        }
+
+        hr.custom-line {
+            border: 0;
+            height: 2px;
+            background-color: #95a5a6;
+            width: 100%;
+            margin-top: 5px;
+            margin-bottom: 15px;
+            box-shadow: 0 3px 5px rgba(0,0,0,0.2);
+        }
+
+        .signature {
+            font-size: 11px;
+            color: #7f8c8d;
+            margin-bottom: 25px;
+            font-style: italic;
+            padding-bottom: 10px;
+            display: block;
+            text-align: right;
+        }
+        .signature a { color: inherit; text-decoration: none; font-weight: bold; transition: color 0.3s; }
+        .signature a:hover { color: #3498db; }
+
+        /* Champ de recherche */
+        .dataTables_filter input {
+            border: 2px solid #3498db;
+            border-radius: 5px;
+            padding: 5px 10px;
+            background-color: #fcfcfc;
+        }
+        .dataTables_filter input:focus { box-shadow: 0 0 8px rgba(52, 152, 219, 0.4); outline: none; }
+
+        /* Alignements */
+        .dataTables_wrapper .row:first-child { flex-direction: row-reverse; }
+        .dataTables_filter { text-align: left; }
+        .dataTables_length { text-align: right; }
+
+        /* Couleur de l'entête du tableau */
+        table.dataTable thead { background-color: #3498db; color: white; }
+        table.dataTable.fixedHeader-floating thead { background-color: #3498db; color: white; }
+
+        .dataTables_wrapper { font-size: 14px; margin-top: 10px; }
+
+        #loading { font-size: 18px; color: #666; text-align: center; padding: 20px; }
+
+        /* --- STYLE DE LA MODALE (POP-UP) --- */
+        .modal-body {
+            white-space: pre-wrap;
+            font-size: 15px;
+            line-height: 1.6;
+            color: #2c3e50;
+        }
+        .modal-header {
+            background-color: #3498db;
+            color: white;
+        }
+
+        /* --- NOUVEAU : Optimisation Mobile (Responsive) --- */
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+            .container { padding: 10px; }
+            h1 { font-size: 18px; margin-bottom: 5px; }
+            .signature { margin-bottom: 10px; }
+            .dataTables_wrapper { font-size: 11px !important; }
+            table.dataTable tbody td, table.dataTable thead th { padding: 5px 4px !important; }
+            .btn-sm { font-size: 10px !important; padding: 2px 5px !important; }
+            .dataTables_filter input { width: 100%; margin-left: 0 !important; }
+        }
+    </style>
+</head>
+<body>
+
+<noscript>
+    <div class="alert alert-warning text-center">JavaScript est nécessaire pour afficher ce tableau. Veuillez activer JavaScript.</div>
+</noscript>
+
+<div class="container" id="main-container" aria-live="polite">
+    <h1 id="main-title">Médicaments à Conditions Particulières de Remboursement</h1>
+    <hr class="custom-line">
+    <div class="signature">©2025 by <a href="https://facebook.com/LammariOmDev" target="_blank" rel="noopener noreferrer">LammariOmDev®</a></div>
+
+    <div id="loading" role="status" aria-live="polite" aria-busy="true">
+        <div class="spinner-border text-primary" role="status" aria-hidden="true"></div>
+        <div class="mt-2">Chargement des données...</div>
+    </div>
+
+    <div class="table-responsive" aria-hidden="true">
+        <table id="monTableau" class="table table-striped" style="width:100%; display:none;" aria-describedby="table-caption">
+            <caption id="table-caption" class="visually-hidden">Tableau des médicaments et conditions de remboursement</caption>
+            <thead>
+                <tr id="table-headers"></tr>
+            </thead>
+            <tbody id="table-body"></tbody>
+        </table>
+    </div>
+</div>
+
+<div class="modal fade" id="detailModal" tabindex="-1" aria-labelledby="modal-title" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modal-title">Détails de la Condition</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+      </div>
+      <div class="modal-body" id="modal-content-body"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Scripts placés en bas pour améliorer le rendu initial -->
+<script src="https://code.jquery.com/jquery-3.7.0.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.datatables.net/fixedheader/3.4.0/js/dataTables.fixedHeader.min.js"></script>
+
+<script>
+    let tableInstance = null;
+    let myModal = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        myModal = new bootstrap.Modal(document.getElementById('detailModal'));
+        loadExcel('cpr.xlsx');
+    });
+
+    async function loadExcel(file) {
+        const loadingEl = document.getElementById('loading');
+        const tableEl = document.getElementById('monTableau');
+        const tableWrapper = tableEl.closest('.table-responsive');
+
+        loadingEl.style.display = 'block';
+        loadingEl.setAttribute('aria-busy', 'true');
+        tableEl.style.display = 'none';
+        tableWrapper.setAttribute('aria-hidden', 'true');
+
+        if ($.fn.DataTable.isDataTable('#monTableau')) {
+            $('#monTableau').DataTable().destroy();
+            document.getElementById('table-headers').innerHTML = '';
+            document.getElementById('table-body').innerHTML = '';
+        }
+
+        try {
+            const response = await fetch(file + '?t=' + new Date().getTime());
+            if (!response.ok) throw new Error("Fichier introuvable");
+
+            const arrayBuffer = await response.arrayBuffer();
+            const data = new Uint8Array(arrayBuffer);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const firstSheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[firstSheetName];
+            const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
+
+            if (jsonData.length === 0) {
+                throw new Error("Feuille vide");
+            }
+
+            const headers = jsonData[0].map(h => (h || '').toString());
+            const headerRow = document.getElementById('table-headers');
+
+            headers.forEach(header => {
+                const th = document.createElement('th');
+                th.scope = 'col';
+                th.tabIndex = 0;
+                th.textContent = header || "-";
+                headerRow.appendChild(th);
+            });
+
+            const body = document.getElementById('table-body');
+
+            for (let i = 1; i < jsonData.length; i++) {
+                const rowData = jsonData[i];
+                const hasContent = rowData.some(cell => String(cell).trim() !== '');
+                if (!hasContent) continue;
+
+                const tr = document.createElement('tr');
+                const drugName = rowData[0] !== undefined ? String(rowData[0]) : "Médicament";
+
+                headers.forEach((_, index) => {
+                    const td = document.createElement('td');
+                    const cellContent = rowData[index] !== undefined ? String(rowData[index]) : '';
+                    const currentHeaderName = (headers[index] || '').toString().trim().toUpperCase();
+
+                    if ((currentHeaderName === "CPR" || currentHeaderName === "CONDITIONS") && cellContent.trim() !== "") {
+                        const btn = document.createElement('button');
+                        btn.type = 'button';
+                        btn.className = 'btn btn-sm btn-info text-white';
+                        btn.textContent = 'Voir détails';
+                        btn.style.borderRadius = '20px';
+                        btn.style.fontSize = '12px';
+                        btn.style.whiteSpace = 'nowrap';
+                        btn.setAttribute('aria-haspopup', 'dialog');
+                        btn.setAttribute('aria-controls', 'detailModal');
+
+                        btn.addEventListener('click', () => {
+                            document.getElementById('modal-content-body').textContent = cellContent;
+                            document.getElementById('modal-title').textContent = drugName;
+                            myModal.show();
+                        });
+
+                        td.appendChild(btn);
+                    } else {
+                        td.textContent = cellContent;
+                    }
+                    tr.appendChild(td);
+                });
+
+                body.appendChild(tr);
+            }
+
+            tableInstance = $('#monTableau').DataTable({
+                fixedHeader: true,
+                language: {
+                    processing:     "Traitement en cours...",
+                    search:         "Rechercher&nbsp;:",
+                    lengthMenu:     "Afficher : _MENU_  lignes",
+                    info:           "Affichage de _START_ à _END_ sur _TOTAL_ éléments",
+                    infoEmpty:      "Affichage de 0 à 0 sur 0 éléments",
+                    infoFiltered:   "(filtré de _MAX_ éléments au total)",
+                    loadingRecords: "Chargement en cours...",
+                    zeroRecords:    "Aucun élément à afficher",
+                    emptyTable:     "Aucune donnée disponible dans le tableau",
+                    paginate: {
+                        first:      "Premier",
+                        previous:   "Précédent",
+                        next:       "Suivant",
+                        last:       "Dernier"
+                    }
+                },
+                pageLength: 100,
+                lengthMenu: [20, 50, 100, 200],
+                order: []
+            });
+
+            loadingEl.style.display = 'none';
+            loadingEl.setAttribute('aria-busy', 'false');
+            tableEl.style.display = 'table';
+            tableWrapper.setAttribute('aria-hidden', 'false');
+
+            tableInstance.columns.adjust().draw();
+
+            setTimeout(() => {
+                const input = document.querySelector('.dataTables_filter input');
+                if (input) input.focus();
+            }, 100);
+
+        } catch (error) {
+            console.error("Erreur:", error);
+            loadingEl.innerHTML =
+                "<div class='alert alert-danger'>Erreur : Impossible de charger le fichier " + file + ".</div>";
+            loadingEl.setAttribute('aria-busy', 'false');
+        }
+    }
+</script>
+
+</body>
+</html>
