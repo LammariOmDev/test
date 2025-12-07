@@ -175,7 +175,6 @@
         tableEl.style.display = 'none';
         tableWrapper.setAttribute('aria-hidden', 'true');
 
-        // Si une instance DataTable existe déjà, la détruire proprement
         if ($.fn.DataTable.isDataTable('#monTableau')) {
             $('#monTableau').DataTable().destroy();
             document.getElementById('table-headers').innerHTML = '';
@@ -212,7 +211,6 @@
 
             for (let i = 1; i < jsonData.length; i++) {
                 const rowData = jsonData[i];
-                // Skip entirely empty rows
                 const hasContent = rowData.some(cell => String(cell).trim() !== '');
                 if (!hasContent) continue;
 
@@ -235,7 +233,6 @@
                         btn.setAttribute('aria-haspopup', 'dialog');
                         btn.setAttribute('aria-controls', 'detailModal');
 
-                        // Utiliser textContent (sécurisé) pour insérer le contenu dans la modale
                         btn.addEventListener('click', () => {
                             document.getElementById('modal-content-body').textContent = cellContent;
                             document.getElementById('modal-title').textContent = drugName;
@@ -244,7 +241,6 @@
 
                         td.appendChild(btn);
                     } else {
-                        // textContent empêche l'injection HTML accidentelle
                         td.textContent = cellContent;
                     }
                     tr.appendChild(td);
@@ -253,7 +249,6 @@
                 body.appendChild(tr);
             }
 
-            // Initialisation DataTables
             tableInstance = $('#monTableau').DataTable({
                 fixedHeader: true,
                 language: {
@@ -278,7 +273,6 @@
                 order: []
             });
 
-            // Afficher le tableau et masquer le loader
             loadingEl.style.display = 'none';
             loadingEl.setAttribute('aria-busy', 'false');
             tableEl.style.display = 'table';
@@ -286,7 +280,6 @@
 
             tableInstance.columns.adjust().draw();
 
-            // focus sur le champ recherche (si présent)
             setTimeout(() => {
                 const input = document.querySelector('.dataTables_filter input');
                 if (input) input.focus();
