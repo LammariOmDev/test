@@ -3,10 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Liste Médicaments Remboursables - LammariOmDev®</title>
+    <title>Médicaments à Conditions Particulières - LammariOmDev®</title>
     
+    <link rel="icon" type="image/png" href="favicon.png">
+
     <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
+    
+    <link href="https://cdn.datatables.net/fixedheader/3.4.0/css/fixedHeader.bootstrap5.min.css" rel="stylesheet">
 
     <style>
         body { 
@@ -55,18 +59,6 @@
         .signature a { color: inherit; text-decoration: none; font-weight: bold; transition: color 0.3s; }
         .signature a:hover { color: #3498db; }
 
-        /* Onglets */
-        .nav-pills { justify-content: center; margin-bottom: 20px; gap: 15px; }
-        .nav-pills .nav-link {
-            color: #3498db; border: 2px solid #3498db; font-weight: bold;
-            border-radius: 30px; padding: 10px 25px; transition: 0.3s;
-        }
-        .nav-pills .nav-link:hover { background-color: #eaf6ff; }
-        .nav-pills .nav-link.active {
-            background-color: #3498db; color: white;
-            box-shadow: 0 4px 6px rgba(52, 152, 219, 0.4);
-        }
-
         /* Champ de recherche */
         .dataTables_filter input {
             border: 2px solid #3498db !important; 
@@ -79,13 +71,16 @@
         .dataTables_filter { text-align: left !important; }
         .dataTables_length { text-align: right !important; }
         
-        /* En-tête : Couleur bleue */
+        /* Couleur de l'entête du tableau */
         table.dataTable thead { background-color: #3498db; color: white; }
+        /* Correction pour que l'entête fixe garde la couleur */
+        table.dataTable.fixedHeader-floating thead { background-color: #3498db; color: white; }
+        
         .dataTables_wrapper { font-size: 14px; margin-top: 10px; }
         
         #loading { font-size: 18px; color: #666; text-align: center; padding: 20px; }
 
-        /* Pop-up */
+        /* --- STYLE DE LA MODALE (POP-UP) --- */
         .modal-body {
             white-space: pre-wrap; 
             font-size: 15px;
@@ -100,29 +95,45 @@
             filter: invert(1) grayscale(100%) brightness(200%); 
         }
 
-        /* Petit ajustement pour l'alignement des colonnes avec le scroll */
-        .dataTables_scrollHeadInner { width: 100% !important; }
-        .dataTables_scrollHeadInner table { width: 100% !important; }
+        /* --- NOUVEAU : Optimisation Mobile (Responsive) --- */
+        @media (max-width: 768px) {
+            body { 
+                padding: 10px; /* Moins de marge autour de la page */
+            }
+            .container { 
+                padding: 10px; /* Utilisation maximale de la largeur */
+            }
+            h1 { 
+                font-size: 18px; /* Titre plus petit */
+                margin-bottom: 5px;
+            }
+            .signature {
+                margin-bottom: 10px;
+            }
+            /* Réduction de la police du tableau et des boutons */
+            .dataTables_wrapper { 
+                font-size: 11px !important; 
+            }
+            table.dataTable tbody td, table.dataTable thead th {
+                padding: 5px 4px !important; /* Cellules plus compactes */
+            }
+            .btn-sm {
+                font-size: 10px !important;
+                padding: 2px 5px !important;
+            }
+            /* Ajustement champ de recherche mobile */
+            .dataTables_filter input {
+                width: 100%;
+                margin-left: 0 !important;
+            }
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
     
-    <ul class="nav nav-pills" id="pills-tab" role="tablist">
-        <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="btn-demunis" onclick="switchCategory('demunis')">
-                Catégorie Démunis
-            </button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="btn-cancer" onclick="switchCategory('cancer')">
-                Catégorie Cancer
-            </button>
-        </li>
-    </ul>
-
-    <h1 id="main-title">Médicaments Remboursables (Démunis)</h1>
+    <h1 id="main-title">Médicaments à Conditions Particulières de Remboursement</h1>
     <hr class="custom-line">
     <div class="signature">©2025 by <a href="https://facebook.com/LammariOmDev" target="_blank">LammariOmDev®</a></div>
 
@@ -131,19 +142,21 @@
         <br>Chargement des données...
     </div>
 
-    <table id="monTableau" class="table table-striped" style="width:100%; display:none;">
-        <thead>
-            <tr id="table-headers"></tr>
-        </thead>
-        <tbody id="table-body"></tbody>
-    </table>
+    <div class="table-responsive">
+        <table id="monTableau" class="table table-striped" style="width:100%; display:none;">
+            <thead>
+                <tr id="table-headers"></tr>
+            </thead>
+            <tbody id="table-body"></tbody>
+        </table>
     </div>
+</div>
 
 <div class="modal fade" id="detailModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content">
       <div class="modal-header">
-        <h5 class="modal-title" id="modal-title">Détails</h5>
+        <h5 class="modal-title" id="modal-title">Détails de la Condition</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body" id="modal-content-body">
@@ -161,34 +174,16 @@
 <script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
 
+<script src="https://cdn.datatables.net/fixedheader/3.4.0/js/dataTables.fixedHeader.min.js"></script>
+
 <script>
     let tableInstance = null;
     let myModal = null; 
 
     window.onload = function() {
         myModal = new bootstrap.Modal(document.getElementById('detailModal'));
-        switchCategory('demunis');
+        loadExcel('cpr.xlsx');
     };
-
-    function switchCategory(category) {
-        let fileName = '';
-        let title = '';
-        
-        document.querySelectorAll('.nav-link').forEach(btn => btn.classList.remove('active'));
-        
-        if (category === 'demunis') {
-            fileName = 'demunis.xlsx';
-            title = "Médicaments Remboursables par CHIFA Catégorie Démunis";
-            document.getElementById('btn-demunis').classList.add('active');
-        } else if (category === 'cancer') {
-            fileName = 'cancer.xlsx';
-            title = "Médicaments Remboursables par CHIFA Catégorie CANCER";
-            document.getElementById('btn-cancer').classList.add('active');
-        }
-
-        document.getElementById('main-title').innerText = title;
-        loadExcel(fileName);
-    }
 
     async function loadExcel(file) {
         document.getElementById('loading').style.display = 'block';
@@ -228,7 +223,6 @@
                     const rowData = jsonData[i];
                     if (rowData.length > 0) {
                         const tr = document.createElement('tr');
-                        
                         let drugName = (rowData[0] !== undefined) ? String(rowData[0]) : "Médicament";
                         
                         headers.forEach((_, index) => { 
@@ -236,7 +230,7 @@
                             let cellContent = (rowData[index] !== undefined) ? String(rowData[index]) : "";
                             let currentHeaderName = (headers[index] || "").toString().trim().toUpperCase();
 
-                            if (currentHeaderName === "CPR" && cellContent.trim() !== "") {
+                            if ((currentHeaderName === "CPR" || currentHeaderName === "CONDITIONS") && cellContent.trim() !== "") {
                                 const btn = document.createElement('button');
                                 btn.className = 'btn btn-sm btn-info text-white'; 
                                 btn.textContent = 'Voir Détails';
@@ -258,20 +252,13 @@
                     }
                 }
 
-                document.getElementById('loading').style.display = 'none';
-                document.getElementById('monTableau').style.display = 'table';
-
                 tableInstance = $('#monTableau').DataTable({
-                    // --- NOUVEAU : ACTIVATION DU SCROLL INTERNE ---
-                    // "55vh" signifie 55% de la hauteur visible de l'écran
-                    scrollY:        "55vh", 
-                    scrollCollapse: true,
-                    scrollX:        true, // Active le scroll horizontal si besoin
-                    // ----------------------------------------------
+                    fixedHeader: true,
+                    
                     language: {
                         processing:     "Traitement en cours...",
                         search:         "Rechercher&nbsp;:",
-                        lengthMenu:    "Afficher : _MENU_ lignes",
+                        lengthMenu:     "Afficher : _MENU_  lignes",
                         info:           "Affichage de _START_ à _END_ sur _TOTAL_ éléments",
                         infoEmpty:      "Affichage de 0 à 0 sur 0 éléments",
                         infoFiltered:   "(filtré de _MAX_ éléments au total)",
@@ -285,13 +272,14 @@
                             last:       "Dernier"
                         }
                     },
-                    pageLength: 20, 
-                    lengthMenu: [10, 20, 50, 100], 
+                    pageLength: 100, 
+                    lengthMenu: [20, 50, 100, 200], 
                     order: [] 
                 });
 
-                // Cette commande est cruciale quand on active le scrollX/Y 
-                // pour réaligner les titres avec les colonnes
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('monTableau').style.display = 'table';
+                
                 tableInstance.columns.adjust().draw();
 
                 setTimeout(function() {
@@ -302,11 +290,10 @@
         } catch (error) {
             console.error("Erreur:", error);
             document.getElementById('loading').innerHTML = 
-                "<span style='color:red; font-weight:bold'>Erreur : Impossible de charger le fichier " + file + ".</span>";
+                "<div class='alert alert-danger'>Erreur : Impossible de charger le fichier " + file + ".</div>";
         }
     }
 </script>
 
 </body>
 </html>
-
