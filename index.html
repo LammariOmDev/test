@@ -144,14 +144,19 @@
             padding:22px 28px 36px 28px;
         }
         table.dataTable thead {
-            background: linear-gradient(90deg, var(--green-1), var(--green-2));
-            color: white;
+            background: var(--green-1);
+            color: #fff;
             border:none;
+        }
+        table.dataTable.fixedHeader-floating thead {
+            background: var(--green-1) !important;
+            color: #fff !important;
         }
         table.dataTable thead th {
             font-weight:700;
             padding:14px 18px;
             text-align:left;
+            color: #fff;
         }
         table.dataTable tbody td {
             padding:18px;
