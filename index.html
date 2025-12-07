@@ -1,108 +1,198 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Médicaments à Conditions Particulières - LammariOmDev®</title>
     <meta name="description" content="Liste des médicaments à conditions particulières de remboursement (CPR) avec recherche et détails.">
 
     <link rel="icon" type="image/png" href="favicon.png">
 
-    <!-- Remarque : pour plus de sécurité/performance, ajouter des attributs integrity & crossorigin si vous gardez ces CDN -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css" rel="stylesheet">
     <link href="https://cdn.datatables.net/fixedheader/3.4.0/css/fixedHeader.bootstrap5.min.css" rel="stylesheet">
 
     <style>
+        :root{
+            --bg-start: #e9f7ef;
+            --bg-end: #dff3e9;
+            --card-bg: #ffffff;
+            --green-1: #2ea56a;
+            --green-2: #4cd27f;
+            --muted: #7f8c8d;
+        }
+
+        html,body{
+            height:100%;
+            margin:0;
+        }
+
         body {
-            padding: 20px;
-            background-color: #f8f9fa;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        .container {
-            background: white;
             padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 0 15px rgba(0,0,0,0.1);
-            min-height: 80vh;
+            background: linear-gradient(135deg, #a6d8b8 0%, #7ed08f 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            -webkit-font-smoothing:antialiased;
+            -moz-osx-font-smoothing:grayscale;
         }
 
-        h1 {
-            margin-bottom: 10px;
-            color: #2c3e50;
-            font-size: 26px;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            text-align: center;
+        /* Card wrapper similar to the screenshot - centered with big rounded corners */
+        .app-card {
+            max-width: 1180px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            border-radius: 14px;
+            box-shadow: 0 20px 40px rgba(18, 60, 30, 0.15);
+            overflow: hidden;
         }
 
-        hr.custom-line {
-            border: 0;
-            height: 2px;
-            background-color: #95a5a6;
-            width: 100%;
-            margin-top: 5px;
-            margin-bottom: 15px;
-            box-shadow: 0 3px 5px rgba(0,0,0,0.2);
-        }
-
-        .signature {
-            font-size: 11px;
-            color: #7f8c8d;
-            margin-bottom: 25px;
-            font-style: italic;
-            padding-bottom: 10px;
-            display: block;
-            text-align: right;
-        }
-        .signature a { color: inherit; text-decoration: none; font-weight: bold; transition: color 0.3s; }
-        .signature a:hover { color: #3498db; }
-
-        /* Champ de recherche */
-        .dataTables_filter input {
-            border: 2px solid #3498db;
-            border-radius: 5px;
-            padding: 5px 10px;
-            background-color: #fcfcfc;
-        }
-        .dataTables_filter input:focus { box-shadow: 0 0 8px rgba(52, 152, 219, 0.4); outline: none; }
-
-        /* Alignements */
-        .dataTables_wrapper .row:first-child { flex-direction: row-reverse; }
-        .dataTables_filter { text-align: left; }
-        .dataTables_length { text-align: right; }
-
-        /* Couleur de l'entête du tableau */
-        table.dataTable thead { background-color: #3498db; color: white; }
-        table.dataTable.fixedHeader-floating thead { background-color: #3498db; color: white; }
-
-        .dataTables_wrapper { font-size: 14px; margin-top: 10px; }
-
-        #loading { font-size: 18px; color: #666; text-align: center; padding: 20px; }
-
-        /* --- STYLE DE LA MODALE (POP-UP) --- */
-        .modal-body {
-            white-space: pre-wrap;
-            font-size: 15px;
-            line-height: 1.6;
-            color: #2c3e50;
-        }
-        .modal-header {
-            background-color: #3498db;
+        /* Hero/header with gradient (green instead of purple) */
+        .hero {
+            background: linear-gradient(90deg, var(--green-1), var(--green-2));
             color: white;
+            padding: 34px 36px;
+            text-align: center;
+            position: relative;
+        }
+        .hero .logo-pill{
+            width:44px;
+            height:44px;
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            border-radius:12px;
+            margin-right:10px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 100%);
+            box-shadow: 0 6px 18px rgba(24,112,66,0.15);
+            vertical-align:middle;
+            font-size:20px;
         }
 
-        /* --- NOUVEAU : Optimisation Mobile (Responsive) --- */
-        @media (max-width: 768px) {
-            body { padding: 10px; }
-            .container { padding: 10px; }
-            h1 { font-size: 18px; margin-bottom: 5px; }
-            .signature { margin-bottom: 10px; }
-            .dataTables_wrapper { font-size: 11px !important; }
-            table.dataTable tbody td, table.dataTable thead th { padding: 5px 4px !important; }
-            .btn-sm { font-size: 10px !important; padding: 2px 5px !important; }
-            .dataTables_filter input { width: 100%; margin-left: 0 !important; }
+        .hero h1 {
+            margin:0;
+            font-size:32px;
+            font-weight:700;
+            display:inline-block;
+            vertical-align:middle;
+        }
+        .hero p {
+            margin:6px 0 0;
+            opacity:0.95;
+            font-size:14px;
+        }
+
+        .hero .hero-right {
+            position:absolute;
+            right:20px;
+            top:18px;
+            color:rgba(255,255,255,0.9);
+            font-size:13px;
+        }
+
+        /* Controls area (search + per-page) */
+        .controls {
+            padding: 18px 28px;
+            display:flex;
+            gap:16px;
+            align-items:center;
+            justify-content:space-between;
+            border-bottom: 1px solid #eef3ef;
+        }
+        .controls .search-wrap {
+            flex:1 1 auto;
+        }
+        .input-search {
+            width:100%;
+            display:flex;
+            align-items:center;
+            gap:10px;
+            background:#fbfffb;
+            border-radius:10px;
+            padding:12px 14px;
+            box-shadow: inset 0 1px 0 rgba(0,0,0,0.02);
+            border:1px solid rgba(34,139,84,0.08);
+        }
+        .input-search svg { width:18px; height:18px; flex:0 0 18px; color:var(--green-1); }
+        .input-search input {
+            border:0;
+            outline:none;
+            background:transparent;
+            font-size:15px;
+            color:#2c3e50;
+        }
+
+        .controls .right-controls {
+            display:flex;
+            gap:12px;
+            align-items:center;
+        }
+        .controls label { margin:0 8px 0 0; font-size:14px; color:#4e6b57; }
+
+        /* Counts bar */
+        .counts {
+            background: linear-gradient(180deg, #f4fcf6 0%, #eef8ee 100%);
+            padding:10px 28px;
+            color:#2c5d3e;
+            font-size:14px;
+            border-bottom:1px solid #edf6ef;
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+        }
+
+        /* Table area */
+        .table-area {
+            padding:22px 28px 36px 28px;
+        }
+        table.dataTable thead {
+            background: linear-gradient(90deg, var(--green-1), var(--green-2));
+            color: white;
+            border:none;
+        }
+        table.dataTable thead th {
+            font-weight:700;
+            padding:14px 18px;
+            text-align:left;
+        }
+        table.dataTable tbody td {
+            padding:18px;
+            vertical-align:middle;
+            color:#344b3a;
+        }
+        table.dataTable tbody tr:nth-child(even) {
+            background: #fff;
+        }
+        table.dataTable tbody tr:nth-child(odd) {
+            background: #fbfffb;
+        }
+
+        /* Détails button - green pill with subtle gradient and shadow */
+        .btn-details {
+            background: linear-gradient(180deg, #6fe09a, #2ea56a);
+            border: none;
+            color: white;
+            padding:8px 12px;
+            border-radius:10px;
+            display:inline-flex;
+            gap:8px;
+            align-items:center;
+            box-shadow: 0 6px 18px rgba(46,165,106,0.18);
+            font-weight:600;
+            font-size:13px;
+        }
+        .btn-details svg { width:16px; height:16px; }
+
+        /* Modal styles */
+        .modal-header {
+            background: linear-gradient(90deg, var(--green-1), var(--green-2));
+            color:white;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 900px) {
+            .hero h1 { font-size:22px; }
+            .controls { flex-direction:column; align-items:stretch; gap:12px; }
+            .controls .right-controls { justify-content:flex-end; }
+            .hero .hero-right { display:none; }
         }
     </style>
 </head>
@@ -112,27 +202,56 @@
     <div class="alert alert-warning text-center">JavaScript est nécessaire pour afficher ce tableau. Veuillez activer JavaScript.</div>
 </noscript>
 
-<div class="container" id="main-container" aria-live="polite">
-    <h1 id="main-title">Médicaments à Conditions Particulières de Remboursement</h1>
-    <hr class="custom-line">
-    <div class="signature">©2025 by <a href="https://facebook.com/LammariOmDev" target="_blank" rel="noopener noreferrer">LammariOmDev®</a></div>
-
-    <div id="loading" role="status" aria-live="polite" aria-busy="true">
-        <div class="spinner-border text-primary" role="status" aria-hidden="true"></div>
-        <div class="mt-2">Chargement des données...</div>
+<div class="app-card" role="main" aria-labelledby="main-title">
+    <div class="hero" role="banner">
+        <div class="logo-pill" aria-hidden="true">💊</div>
+        <h1 id="main-title">Médicaments CPR</h1>
+        <p>Conditions Particulières de Remboursement</p>
+        <div class="hero-right">©2025 by LammariOmDev®</div>
     </div>
 
-    <div class="table-responsive" aria-hidden="true">
-        <table id="monTableau" class="table table-striped" style="width:100%; display:none;" aria-describedby="table-caption">
-            <caption id="table-caption" class="visually-hidden">Tableau des médicaments et conditions de remboursement</caption>
-            <thead>
-                <tr id="table-headers"></tr>
-            </thead>
-            <tbody id="table-body"></tbody>
-        </table>
+    <div class="controls" role="region" aria-label="Contrôles de recherche et affichage">
+        <div class="search-wrap">
+            <div class="input-search" aria-hidden="false">
+                <!-- loupe SVG -->
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="10.5" cy="10.5" r="5.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                <input id="searchInput" type="search" placeholder="Rechercher dans la base de données..." aria-label="Recherche dans la base de données">
+            </div>
+        </div>
+
+        <div class="right-controls" aria-hidden="false">
+            <div class="form-inline">
+                <label for="perPageSelect">Lignes par page:</label>
+                <select id="perPageSelect" class="form-select form-select-sm" style="width:100px;">
+                    <option>20</option>
+                    <option>50</option>
+                    <option selected>100</option>
+                    <option>200</option>
+                    <option>500</option>
+                </select>
+            </div>
+        </div>
+    </div>
+
+    <div class="counts" aria-live="polite">
+        <div>Total: <strong id="total-count">1 227</strong> médicaments</div>
+        <div>Affichés: <strong id="display-count">1 227</strong> résultats</div>
+    </div>
+
+    <div class="table-area">
+        <div class="table-responsive" aria-hidden="false">
+            <table id="monTableau" class="table table-borderless table-hover" style="width:100%;">
+                <caption id="table-caption" class="visually-hidden">Tableau des médicaments et conditions de remboursement</caption>
+                <thead>
+                    <tr id="table-headers"></tr>
+                </thead>
+                <tbody id="table-body"></tbody>
+            </table>
+        </div>
     </div>
 </div>
 
+<!-- Modal -->
 <div class="modal fade" id="detailModal" tabindex="-1" aria-labelledby="modal-title" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content">
@@ -142,13 +261,13 @@
       </div>
       <div class="modal-body" id="modal-content-body"></div>
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Fermer</button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Scripts placés en bas pour améliorer le rendu initial -->
+<!-- Scripts -->
 <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
@@ -162,23 +281,20 @@
 
     document.addEventListener('DOMContentLoaded', () => {
         myModal = new bootstrap.Modal(document.getElementById('detailModal'));
+        // On lie le champ de recherche personnalisé à DataTables plus bas après initialisation
         loadExcel('cpr.xlsx');
     });
 
     async function loadExcel(file) {
-        const loadingEl = document.getElementById('loading');
         const tableEl = document.getElementById('monTableau');
-        const tableWrapper = tableEl.closest('.table-responsive');
+        const headerRow = document.getElementById('table-headers');
+        const body = document.getElementById('table-body');
 
-        loadingEl.style.display = 'block';
-        loadingEl.setAttribute('aria-busy', 'true');
-        tableEl.style.display = 'none';
-        tableWrapper.setAttribute('aria-hidden', 'true');
-
+        // cleanup existing table
         if ($.fn.DataTable.isDataTable('#monTableau')) {
             $('#monTableau').DataTable().destroy();
-            document.getElementById('table-headers').innerHTML = '';
-            document.getElementById('table-body').innerHTML = '';
+            headerRow.innerHTML = '';
+            body.innerHTML = '';
         }
 
         try {
@@ -186,8 +302,7 @@
             if (!response.ok) throw new Error("Fichier introuvable");
 
             const arrayBuffer = await response.arrayBuffer();
-            const data = new Uint8Array(arrayBuffer);
-            const workbook = XLSX.read(data, { type: 'array' });
+            const workbook = XLSX.read(new Uint8Array(arrayBuffer), { type: 'array' });
             const firstSheetName = workbook.SheetNames[0];
             const worksheet = workbook.Sheets[firstSheetName];
             const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '' });
@@ -196,18 +311,13 @@
                 throw new Error("Feuille vide");
             }
 
-            const headers = jsonData[0].map(h => (h || '').toString());
-            const headerRow = document.getElementById('table-headers');
-
-            headers.forEach(header => {
+            const headers = jsonData[0].map(h => (h||'').toString());
+            headers.forEach(h => {
                 const th = document.createElement('th');
                 th.scope = 'col';
-                th.tabIndex = 0;
-                th.textContent = header || "-";
+                th.textContent = h || '-';
                 headerRow.appendChild(th);
             });
-
-            const body = document.getElementById('table-body');
 
             for (let i = 1; i < jsonData.length; i++) {
                 const rowData = jsonData[i];
@@ -225,20 +335,13 @@
                     if ((currentHeaderName === "CPR" || currentHeaderName === "CONDITIONS") && cellContent.trim() !== "") {
                         const btn = document.createElement('button');
                         btn.type = 'button';
-                        btn.className = 'btn btn-sm btn-info text-white';
-                        btn.textContent = 'Voir détails';
-                        btn.style.borderRadius = '20px';
-                        btn.style.fontSize = '12px';
-                        btn.style.whiteSpace = 'nowrap';
-                        btn.setAttribute('aria-haspopup', 'dialog');
-                        btn.setAttribute('aria-controls', 'detailModal');
-
+                        btn.className = 'btn-details';
+                        btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 4v8" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M20 21H4" stroke="white" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Détails</span>`;
                         btn.addEventListener('click', () => {
                             document.getElementById('modal-content-body').textContent = cellContent;
                             document.getElementById('modal-title').textContent = drugName;
                             myModal.show();
                         });
-
                         td.appendChild(btn);
                     } else {
                         td.textContent = cellContent;
@@ -249,6 +352,7 @@
                 body.appendChild(tr);
             }
 
+            // Init DataTable
             tableInstance = $('#monTableau').DataTable({
                 fixedHeader: true,
                 language: {
@@ -268,31 +372,36 @@
                         last:       "Dernier"
                     }
                 },
-                pageLength: 100,
-                lengthMenu: [20, 50, 100, 200],
+                pageLength: parseInt(document.getElementById('perPageSelect').value || 100, 10),
+                lengthChange: false,
                 order: []
             });
 
-            loadingEl.style.display = 'none';
-            loadingEl.setAttribute('aria-busy', 'false');
-            tableEl.style.display = 'table';
-            tableWrapper.setAttribute('aria-hidden', 'false');
+            // wire up our custom search input and per-page select
+            const searchInput = document.getElementById('searchInput');
+            searchInput.addEventListener('input', function() {
+                tableInstance.search(this.value).draw();
+                updateCounts();
+            });
 
-            tableInstance.columns.adjust().draw();
+            document.getElementById('perPageSelect').addEventListener('change', function(){
+                const val = parseInt(this.value, 10) || 100;
+                tableInstance.page.len(val).draw();
+                updateCounts();
+            });
 
-            setTimeout(() => {
-                const input = document.querySelector('.dataTables_filter input');
-                if (input) input.focus();
-            }, 100);
+            // update counts
+            function updateCounts(){
+                document.getElementById('total-count').textContent = tableInstance.rows().count().toLocaleString();
+                document.getElementById('display-count').textContent = tableInstance.rows({filter:'applied'}).count().toLocaleString();
+            }
+            updateCounts();
 
         } catch (error) {
             console.error("Erreur:", error);
-            loadingEl.innerHTML =
-                "<div class='alert alert-danger'>Erreur : Impossible de charger le fichier " + file + ".</div>";
-            loadingEl.setAttribute('aria-busy', 'false');
+            document.getElementById('table-body').innerHTML = `<tr><td colspan="20"><div class="alert alert-danger">Erreur : Impossible de charger le fichier ${file}.</div></td></tr>`;
         }
     }
 </script>
-
 </body>
 </html>
